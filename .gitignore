@@ -1,0 +1,22 @@
+*.env.*
+*.wav
+*.mp3
+
+# Python Bytecode
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+.venv/
+.sts_systran/
+env/
+*.egg-info/
+dist/
+build/
+
+# OS-specific
+.DS_Store
+
+# IDE-specific
+.idea/
+.vscode/
