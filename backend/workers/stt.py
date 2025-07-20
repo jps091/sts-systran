@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 
 def stt_worker():
     log.warning(f"[{os.getpid()}] STT 워커 시작. 모델 로딩...")
-    model = WhisperModel("base", device="cpu", compute_type="int8")
+    model = WhisperModel("small", device="cpu", compute_type="int8")
 
     while True:
         try:
@@ -31,7 +31,7 @@ def stt_worker():
                 continue
 
             float32_audio = np.frombuffer(pcm_out, dtype=np.int16).astype(np.float32) / 32768.0
-            segments, _ = model.transcribe(float32_audio, beam_size=5)
+            segments, _ = model.transcribe(float32_audio, beam_size=5, language="ko")
             stt_text = "".join(seg.text for seg in segments)
 
             if stt_text.strip():

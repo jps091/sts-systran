@@ -48,7 +48,7 @@ async def broadcast():
         # 2. 전송할 데이터 묶음(딕셔너리) 생성
         payload = {
             "client_id": response.client_id,
-            "translated_text": response.translated,  # 번역된 텍스트
+            "translated_text": response.translated_text,  # 번역된 텍스트
             "audio_bytes_b64": audio_b64  # Base64 인코딩된 오디오
         }
 

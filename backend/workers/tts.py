@@ -41,6 +41,7 @@ def tts_worker():
                 response = StsResponse(
                     client_id=req.client_id,
                     target_lang=req.target_lang,
+                    translated_text=req.translated,
                     audio_bytes=audio_bytes
                 )
                 tts_output_queue.put(response)
