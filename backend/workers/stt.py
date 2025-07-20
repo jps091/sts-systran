@@ -18,7 +18,7 @@ def stt_worker():
             req: STTRequest = stt_input_queue.get()
             if req is None: break
 
-            log.warning(f"[{os.getpid()}] 클라이언트 {req.client_id}의 STT 작업 처리 시작...")
+            #log.warning(f"[{os.getpid()}] 클라이언트 {req.client_id}의 STT 작업 처리 시작...")
             try:
                 pcm_out, _ = (
                     ffmpeg
@@ -31,7 +31,8 @@ def stt_worker():
                 continue
 
             float32_audio = np.frombuffer(pcm_out, dtype=np.int16).astype(np.float32) / 32768.0
-            segments, _ = model.transcribe(float32_audio, beam_size=5, language="ko")
+            #segments, _ = model.transcribe(float32_audio, beam_size=5, language="ko", vad_filter=True)
+            segments, _ = model.transcribe(float32_audio, beam_size=5, language="ko", vad_filter=True, vad_parameters=dict(min_silence_duration_ms=500))
             stt_text = "".join(seg.text for seg in segments)
 
             if stt_text.strip():
