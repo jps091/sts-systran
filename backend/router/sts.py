@@ -33,6 +33,6 @@ async def start_stream(websocket: WebSocket, target_lang: str, client_id: str):
             await loop.run_in_executor(None, stt_input_queue.put, req)
 
     except WebSocketDisconnect:
-        log.warning(f"[{client_id}] 연결 종료 (채널: {target_lang})")
+        log.info(f"[{client_id}] 연결 종료 (채널: {target_lang})")
     finally:
         manager.disconnect(target_lang, websocket)

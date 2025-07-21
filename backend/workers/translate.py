@@ -53,10 +53,8 @@ async def translate_text():
 
     # 세션 재사용으로 커넥션 오버헤드 최소화
     async with aiohttp.ClientSession() as session:
-        log.info("[Translation Manager] 시작")
-
         while True:
-            # 멀티프로세스 큐에서 블로킹 get() 호출을 별도 스레드로 옮겨 논블로킹 처리
+            # 멀티스레드 큐에서 블로킹 get() 호출을 별도 스레드로 옮겨 논블로킹 처리
             client_id, target_lang, stt_text = await loop.run_in_executor(
                 None,
                 stt_output_queue.get
@@ -66,9 +64,8 @@ async def translate_text():
                 # 종료 시그널 받으면 루프 종료
                 break
 
-            log.info(f"[TTS] 텍스트 수신: '''{stt_text}''' → 음성 합성 시작")
             translated = await _translate(session, stt_text, target_lang)
-            log.info(f"[Translation] {client_id=} {target_lang=} => {translated!r}")
+            log.info(f"[Translation Iuput: ] {stt_text=} {target_lang=} => {translated!r}")
 
             tts_req = TTSRequest(
                 client_id=client_id,
@@ -76,5 +73,3 @@ async def translate_text():
                 translated=translated
             )
             tts_input_queue.put(tts_req)
-
-    log.info("[Translation Manager] 종료")
