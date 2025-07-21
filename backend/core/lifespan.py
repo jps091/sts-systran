@@ -9,7 +9,7 @@ from backend.workers.stt import stt_worker
 from backend.workers.translate import translate_text
 from backend.workers.tts import tts_worker
 
-executor = ThreadPoolExecutor(max_workers=3)
+executor = ThreadPoolExecutor(max_workers=4)
 
 log = logging.getLogger(__name__)
 

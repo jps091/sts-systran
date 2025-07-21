@@ -14,22 +14,7 @@ def safe_get(queue, timeout=1):
     except Empty:
         return None
 
-async def broadcast2():
-    log.info("[Broadcaster] 시작.")
-    loop = asyncio.get_running_loop()
-
-    while True:
-        response = await loop.run_in_executor(None, lambda: safe_get(tts_output_queue))
-
-        if response is None:
-            await asyncio.sleep(0.01)
-            continue
-
-        log.info(f"방송 작업 수신: client_id={response.client_id}")
-        await manager.broadcast_bytes(response.client_id, response.target_lang, response.audio_bytes)
-
 async def broadcast():
-    log.info("[Broadcaster] 시작.")
     loop = asyncio.get_running_loop()
 
     while True:
@@ -38,8 +23,6 @@ async def broadcast():
         if response is None:
             await asyncio.sleep(0.01)
             continue
-
-        log.info(f"방송 작업 수신: client_id={response.client_id}")
 
         # --- 💡 프론트엔드로 보낼 JSON 데이터 생성 💡 ---
         # 1. 오디오 바이트를 Base64 문자열로 인코딩
