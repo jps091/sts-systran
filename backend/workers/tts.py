@@ -16,7 +16,9 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 tts_models_map = {
     "en": TTS(model_name="tts_models/en/ljspeech/vits", progress_bar=False).to(device),
     "es": TTS(model_name="tts_models/es/css10/vits", progress_bar=False).to(device),
-    #'zh': TTS(model_name='tts_models/zh-CN/baker/tacotron2-DDC-GST', progress_bar=False).to(device),
+    #"ja": TTS(model_name="tts_models/ja/kokoro/tacotron2-DDC", progress_bar=False).to(device),
+    #"zh-cn": TTS(model_name="tts_models/zh-CN/baker/tacotron2-DDC-GST", progress_bar=False).to(device),
+    #"fr": TTS(model_name="tts_models/fr/css10/vits", progress_bar=False).to(device),
 }
 
 def tts_worker():

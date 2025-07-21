@@ -10,4 +10,5 @@ stt_output_queue  = Queue()
 # 3) 번역 → TTS 입력
 tts_input_queue   = Queue()
 
+# 4) TTS → WS 응답
 tts_output_queue = Queue()
