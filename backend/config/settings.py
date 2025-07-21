@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     env: str = "dev"
     debug: bool = False
     host_url: str
-    openai_api_key: str
+    google_translation_api_key: str
 
     class Config:
         env_file = f".env.{os.getenv('ENV', 'dev')}"  # .env.dev 로드

@@ -1,5 +1,6 @@
 # queues.py
-from multiprocessing import Queue
+#from multiprocessing import Queue
+from queue import Queue
 
 # 1) WebSocket → STT 입력
 stt_input_queue   = Queue()

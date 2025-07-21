@@ -1,13 +1,14 @@
 import asyncio
 import logging
-import os
 
 import aiohttp
 
+from backend.config.settings import get_settings
 from backend.schemas.request import TTSRequest
 from backend.services.queues import stt_output_queue, tts_input_queue
 
 log = logging.getLogger(__name__)
+settings = get_settings()
 
 async def _translate(
     session: aiohttp.ClientSession,
@@ -17,10 +18,11 @@ async def _translate(
     retries: int = 3,
     timeout: float = 5.0,
 ) -> str:
-    # API 키 확인
-    # api_key = os.getenv("GCP_TRANSLATION_KEY")
-    # if not api_key:
-    #     raise ValueError("GCP_TRANSLATION_KEY가 설정되어 있지 않습니다.")
+
+    #API 키 확인
+    api_key = settings.google_translation_api_key
+    if not api_key:
+        raise ValueError("GCP_TRANSLATION_KEY가 설정되어 있지 않습니다.")
 
     url = "https://translation.googleapis.com/language/translate/v2"
     params = {
@@ -28,7 +30,7 @@ async def _translate(
         "target": target_lang,
         "source": "ko",
         "format": "text",
-        "key": "AIzaSyBdsTk1DkMnp3UuN9vUXcEJj8re0dQVLaM",
+        "key": api_key,
     }
 
     # 재시도 로직
