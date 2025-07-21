@@ -15,12 +15,12 @@ class ConnectionManager:
         if target_lang not in self.active_channels:
             self.active_channels[target_lang] = set()
         self.active_channels[target_lang].add(websocket)
-        log.warning(f"채널 [{target_lang}]에 새 클라이언트 연결. 현재 인원: {len(self.active_channels[target_lang])}명")
+        log.info(f"채널 [{target_lang}]에 새 클라이언트 연결. 현재 인원: {len(self.active_channels[target_lang])}명")
 
     def disconnect(self, target_lang: str, websocket: WebSocket):
         if target_lang in self.active_channels:
             self.active_channels[target_lang].remove(websocket)
-            log.warning(f"채널 [{target_lang}]에서 클라이언트 연결 해제. 현재 인원: {len(self.active_channels[target_lang])}명")
+            log.info(f"채널 [{target_lang}]에서 클라이언트 연결 해제. 현재 인원: {len(self.active_channels[target_lang])}명")
             if not self.active_channels[target_lang]:
                 del self.active_channels[target_lang]
 

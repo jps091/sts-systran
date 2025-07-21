@@ -8,15 +8,19 @@ from backend.router.sts import sts_router
 
 
 # --- Logging Settings ---
+# 기본 로깅 설정 (핸들러 및 포맷터 설정)
 logging.basicConfig(
-    level=logging.WARNING,
     format="(%(asctime)s) %(levelname)s - %(name)s - %(message)s",
     datefmt="%y-%m-%d %H:%M:%S"
 )
 
-# Uvicorn 기본 로거 출력抑制
+# Uvicorn 기본 로거 출력 억제
 logging.getLogger("uvicorn.error").propagate = False
 logging.getLogger("uvicorn.access").propagate = False
+
+# 루트 로거와 'backend' 로거의 레벨을 INFO로 명시적으로 설정
+logging.getLogger().setLevel(logging.INFO)
+logging.getLogger("backend").setLevel(logging.INFO)
 
 # --- FastAPI App 생성 ---
 app = FastAPI(

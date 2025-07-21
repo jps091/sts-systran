@@ -14,7 +14,7 @@ sts_router = APIRouter(prefix="/api/v1")
 
 @sts_router.websocket("/ws/{target_lang}/{client_id}")
 async def start_stream(websocket: WebSocket, target_lang: str, client_id: str):
-    log.warning(f"[{client_id}] 연결 (채널: {target_lang})")
+    log.info(f"[{client_id}] 연결 (채널: {target_lang})")
     await manager.connect(target_lang, websocket)
 
     # 현재 실행 중인 이벤트 루프를 가져옵니다.

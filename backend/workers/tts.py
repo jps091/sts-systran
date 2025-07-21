@@ -22,7 +22,7 @@ tts_models_map = {
 }
 
 def tts_worker():
-    log.warning(f"[{os.getpid()}] TTS 워커 시작.")
+    log.info(f"[{os.getpid()}] TTS 워커 시작.")
 
     while True:
         req: TTSRequest = tts_input_queue.get()
@@ -30,7 +30,7 @@ def tts_worker():
         tts_model = tts_models_map[req.target_lang]
 
         try:
-            log.warning(f"TTS 작업 시작: lang={req.target_lang}, text={req.translated!r}")
+            log.info(f"TTS 작업 시작: lang={req.target_lang}, text={req.translated!r}")
 
             samplerate = tts_model.synthesizer.output_sample_rate
             audio_array = tts_model.tts(text=req.translated)
@@ -47,7 +47,7 @@ def tts_worker():
                     audio_bytes=audio_bytes
                 )
                 tts_output_queue.put(response)
-                log.warning(f"[{os.getpid()}] TTS 완료: {len(audio_bytes)} bytes")
+                log.info(f"[{os.getpid()}] TTS 완료: {len(audio_bytes)} bytes")
 
         except Exception as e:
             log.error(f"[{os.getpid()}] TTS 처리 중 오류: {e}")
