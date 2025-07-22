@@ -1,7 +1,7 @@
 ---
 name: test template
 about: 테스트용 템플릿 입니다.
-title: ''
+title: "♻️[test]"
 labels: 'type: test'
 assignees: jps091
 
