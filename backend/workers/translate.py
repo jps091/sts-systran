@@ -48,28 +48,31 @@ async def _translate(
     # 모두 실패하면 빈 문자열 반환
     return ""
 
-async def translate_text():
-    loop = asyncio.get_running_loop()
-
+async def translate_worker():
     # 세션 재사용으로 커넥션 오버헤드 최소화
     async with aiohttp.ClientSession() as session:
         while True:
-            # 멀티스레드 큐에서 블로킹 get() 호출을 별도 스레드로 옮겨 논블로킹 처리
-            client_id, target_lang, stt_text = await loop.run_in_executor(
-                None,
-                stt_output_queue.get
-            )
+            try:
+                # asyncio.Queue에서 비동기적으로 아이템을 가져옴
+                client_id, target_lang, stt_text = await stt_output_queue.get()
 
-            if stt_text is None:
-                # 종료 시그널 받으면 루프 종료
-                break
+                if stt_text is None:
+                    # 종료 시그널 받으면 루프 종료
+                    break
 
-            translated = await _translate(session, stt_text, target_lang)
-            log.info(f"[Translation Iuput: ] {stt_text=} {target_lang=} => {translated!r}")
+                translated = await _translate(session, stt_text, target_lang)
+                log.info(f"[Translation Input:] {stt_text=} {target_lang=} => {translated!r}")
 
-            tts_req = TTSRequest(
-                client_id=client_id,
-                target_lang=target_lang,
-                translated=translated
-            )
-            tts_input_queue.put(tts_req)
+                if not translated:
+                    continue
+
+                tts_req = TTSRequest(
+                    client_id=client_id,
+                    target_lang=target_lang,
+                    translated=translated
+                )
+                await tts_input_queue.put(tts_req)
+            except Exception as e:
+                log.error(f"번역 워커 오류: {e}")
+            finally:
+                stt_output_queue.task_done()

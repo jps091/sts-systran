@@ -1,39 +1,43 @@
 import asyncio
 import base64
 import logging
-from queue import Empty
 
+from backend.schemas.response import StsResponse
 from backend.services.ConnectionManager import manager
 from backend.services.queues import tts_output_queue
 
 log = logging.getLogger(__name__)
 
-def safe_get(queue, timeout=1):
-    try:
-        return queue.get(timeout=timeout)
-    except Empty:
-        return None
-
 async def broadcast():
-    loop = asyncio.get_running_loop()
-
+    """
+    TTS 결과를 클라이언트에게 브로드캐스팅하는 코루틴
+    """
     while True:
-        response = await loop.run_in_executor(None, lambda: safe_get(tts_output_queue))
+        try:
+            # asyncio.Queue에서 직접 비동기적으로 결과를 기다림
+            response: StsResponse = await tts_output_queue.get()
 
-        if response is None:
-            await asyncio.sleep(0.01)
-            continue
+            # 프론트엔드로 보낼 JSON 데이터 생성
+            # 1. 오디오 바이트를 Base64 문자열로 인코딩
+            audio_b64 = base64.b64encode(response.audio_bytes).decode('utf-8')
 
-        # --- 💡 프론트엔드로 보낼 JSON 데이터 생성 💡 ---
-        # 1. 오디오 바이트를 Base64 문자열로 인코딩
-        audio_b64 = base64.b64encode(response.audio_bytes).decode('utf-8')
+            # 2. 전송할 데이터 묶음(딕셔너리) 생성
+            payload = {
+                "client_id": response.client_id,
+                "translated_text": response.translated_text,  # 번역된 텍스트
+                "audio_bytes_b64": audio_b64  # Base64 인코딩된 오디오
+            }
 
-        # 2. 전송할 데이터 묶음(딕셔너리) 생성
-        payload = {
-            "client_id": response.client_id,
-            "translated_text": response.translated_text,  # 번역된 텍스트
-            "audio_bytes_b64": audio_b64  # Base64 인코딩된 오디오
-        }
+            # 새로 만든 broadcast_json 함수 호출
+            await manager.broadcast_json(response.target_lang, payload)
 
-        # --- 💡 새로 만든 broadcast_json 함수 호출 💡 ---
-        await manager.broadcast_json(response.target_lang, payload)
+            # 작업이 완료되었음을 큐에 알림
+            tts_output_queue.task_done()
+
+        except asyncio.CancelledError:
+            log.info("Broadcast task is cancelled.")
+            break
+        except Exception as e:
+            log.error(f"Broadcasting 중 오류 발생: {e}")
+            # 오류 발생 시 잠시 대기 후 계속
+            await asyncio.sleep(0.1)
