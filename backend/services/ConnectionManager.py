@@ -24,7 +24,7 @@ class ConnectionManager:
             if not self.active_channels[target_lang]:
                 del self.active_channels[target_lang]
 
-    # --- 💡 JSON(텍스트) 방송을 위한 새로운 함수 추가 💡 ---
+    # JSON(텍스트) 방송을 위한 새로운 함수 추가
     async def broadcast_json(self, target_lang: str, data: dict):
         """해당 채널의 모든 클라이언트에게 JSON 데이터를 텍스트로 방송합니다."""
         if target_lang not in self.active_channels:
