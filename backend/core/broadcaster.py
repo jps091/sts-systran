@@ -24,12 +24,16 @@ async def broadcast():
             # 2. 전송할 데이터 묶음(딕셔너리) 생성
             payload = {
                 "client_id": response.client_id,
-                "translated_text": response.translated_text,  # 번역된 텍스트
-                "audio_bytes_b64": audio_b64  # Base64 인코딩된 오디오
+                "translated_text": response.translated_text,
+                "audio_bytes_b64": audio_b64
             }
 
-            # 새로 만든 broadcast_json 함수 호출
-            await manager.broadcast_json(response.target_lang, payload)
+            # 특정 클라이언트에게만 개인 메시지 전송
+            await manager.send_personal_json(
+                response.target_lang,
+                response.client_id,
+                payload
+            )
 
             # 작업이 완료되었음을 큐에 알림
             tts_output_queue.task_done()
