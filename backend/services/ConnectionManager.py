@@ -7,50 +7,50 @@ log = logging.getLogger(__name__)
 
 class ConnectionManager:
     def __init__(self):
-        # { "target_lang": {websocket1, websocket2, ...} } 형태
-        self.active_channels: dict[str, set[WebSocket]] = {}
+        # 구조 변경: { "target_lang": { "client_id": websocket } }
+        self.active_channels: dict[str, dict[str, WebSocket]] = {}
 
-    async def connect(self, target_lang: str, websocket: WebSocket):
+    async def connect(self, target_lang: str, client_id: str, websocket: WebSocket):
         await websocket.accept()
         if target_lang not in self.active_channels:
-            self.active_channels[target_lang] = set()
-        self.active_channels[target_lang].add(websocket)
-        log.info(f"채널 [{target_lang}]에 새 클라이언트 연결. 현재 인원: {len(self.active_channels[target_lang])}명")
+            self.active_channels[target_lang] = {}
+        self.active_channels[target_lang][client_id] = websocket
+        log.info(f"채널 [{target_lang}]에 클라이언트 [{client_id}] 연결. 현재 인원: {len(self.active_channels[target_lang])}명")
 
-    def disconnect(self, target_lang: str, websocket: WebSocket):
-        if target_lang in self.active_channels:
-            self.active_channels[target_lang].remove(websocket)
-            log.info(f"채널 [{target_lang}]에서 클라이언트 연결 해제. 현재 인원: {len(self.active_channels[target_lang])}명")
+    def disconnect(self, target_lang: str, client_id: str):
+        if target_lang in self.active_channels and client_id in self.active_channels[target_lang]:
+            del self.active_channels[target_lang][client_id]
+            log.info(f"채널 [{target_lang}]에서 클라이언트 [{client_id}] 연결 해제. 현재 인원: {len(self.active_channels[target_lang])}명")
             if not self.active_channels[target_lang]:
                 del self.active_channels[target_lang]
 
-    # JSON(텍스트) 방송을 위한 새로운 함수 추가
+    async def send_personal_json(self, target_lang: str, client_id: str, data: dict):
+        """특정 클라이언트에게만 JSON 데이터를 전송합니다."""
+        if target_lang in self.active_channels and client_id in self.active_channels[target_lang]:
+            websocket = self.active_channels[target_lang][client_id]
+            try:
+                await websocket.send_text(json.dumps(data))
+            except (WebSocketDisconnect, ConnectionResetError):
+                log.warning(f"클라이언트 [{client_id}]에게 전송 실패 (연결 끊김).")
+                self.disconnect(target_lang, client_id)
+
     async def broadcast_json(self, target_lang: str, data: dict):
         """해당 채널의 모든 클라이언트에게 JSON 데이터를 텍스트로 방송합니다."""
         if target_lang not in self.active_channels:
             return
-
-        json_string = json.dumps(data)  # 딕셔너리를 JSON 문자열로 변환
-
-        # 동시에 여러 클라이언트에게 전송
-        for connection in self.active_channels[target_lang]:
+        
+        json_string = json.dumps(data)
+        # 동시 전송을 위해 코루틴 리스트 생성
+        disconnected_clients = []
+        for client_id, connection in self.active_channels[target_lang].items():
             try:
-                # send_bytes가 아닌 send_text 사용
                 await connection.send_text(json_string)
             except (WebSocketDisconnect, ConnectionResetError):
-                log.warning(f"채널 [{target_lang}]의 클라이언트에게 전송 실패 (연결 끊김).")
-
-    async def broadcast_bytes(self, target_lang: str, data: bytes):
-        """해당 채널의 모든 클라이언트에게 바이트 데이터를 방송합니다."""
-        if target_lang in self.active_channels:
-            # 동시에 여러 클라이언트에게 전송
-            for connection in self.active_channels[target_lang]:
-                try:
-                    await connection.send_bytes(data)
-                except (WebSocketDisconnect, ConnectionResetError):
-                    # 전송 중 연결이 끊어진 클라이언트는 무시하고 계속 진행
-                    log.warning(f"채널 [{target_lang}]의 클라이언트에게 전송 실패 (연결 끊김).")
-                    # 여기서 바로 disconnect를 호출할 수도 있음
-                    # self.disconnect(target_lang, connection)
+                log.warning(f"채널 [{target_lang}]의 클라이언트 [{client_id}]에게 방송 실패 (연결 끊김).")
+                disconnected_clients.append(client_id)
+        
+        # 연결이 끊긴 클라이언트 정리
+        for client_id in disconnected_clients:
+            self.disconnect(target_lang, client_id)
 
 manager = ConnectionManager()

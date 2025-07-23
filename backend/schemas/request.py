@@ -12,6 +12,7 @@ class STTRequest:
     client_id: str
     target_lang: str
     chunk: bytes
+    retry_count: int = 0
 
 @dataclass
 class TTSRequest:
